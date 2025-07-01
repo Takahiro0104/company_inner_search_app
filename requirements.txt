@@ -113,3 +113,4 @@ websockets==14.1
 yarl==1.18.3
 zstandard==0.23.0
 PyMuPDF
+docx2txt
