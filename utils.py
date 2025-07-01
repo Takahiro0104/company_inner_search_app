@@ -69,6 +69,38 @@ def get_llm_response(chat_message):
     Returns:
         LLMからの回答
     """
+    import constants as ct
+from initialize import load_data_sources
+from initialize import CharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+from langchain_community.vectorstores import Chroma
+
+def ensure_retriever():
+    """
+    最初の検索実行時にだけ Retriever を生成する。
+    """
+    if st.session_state.retriever is None:
+        # データロード
+        docs_all = load_data_sources()
+        # チャンク分割
+        splitter = CharacterTextSplitter(
+            chunk_size=ct.CHUNK_SIZE,
+            chunk_overlap=ct.CHUNK_OVERLAP,
+            separator="\n"
+        )
+        splitted = splitter.split_documents(docs_all)
+        # Embeddingモデル
+        embeddings = OpenAIEmbeddings()
+        # VectorStore生成＆永続化しない一時的生成
+        db = Chroma.from_documents(splitted, embedding=embeddings)
+        # Retriever化
+        st.session_state.retriever = db.as_retriever(
+            search_kwargs={"k": ct.RETRIEVAL_DOCUMENT_COUNT}
+        )
+
+def get_llm_response(chat_message):
+    # ここで遅延 Retriever を生成
+    ensure_retriever()
     # LLMのオブジェクトを用意
     llm = ChatOpenAI(model_name=ct.MODEL, temperature=ct.TEMPERATURE)
 
