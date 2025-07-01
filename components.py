@@ -99,7 +99,9 @@ def display_conversation_log():
                         icon = utils.get_source_icon(message['content']['main_file_path'])
                         # 参照元ドキュメントのページ番号が取得できた場合にのみ、ページ番号を表示
                         if "main_page_number" in message["content"]:
-                            st.success(f"{message['content']['main_file_path']}", icon=icon)
+                            num = message["content"]["main_page_number"]
+                            path = message["content"]["main_file_path"]
+                            st.success(f"{path} (ページNo.{num})", icon=icon)
                         else:
                             st.success(f"{message['content']['main_file_path']}", icon=icon)
                         
@@ -116,7 +118,9 @@ def display_conversation_log():
                                 icon = utils.get_source_icon(sub_choice['source'])
                                 # 参照元ドキュメントのページ番号が取得できた場合にのみ、ページ番号を表示
                                 if "page_number" in sub_choice:
-                                    st.info(f"{sub_choice['source']}", icon=icon)
+                                    num = sub_choice["page_number"]
+                                    src = sub_choice["source"]
+                                    st.info(f"{src} (ページNo.{num})", icon=icon)
                                 else:
                                     st.info(f"{sub_choice['source']}", icon=icon)
                     # ファイルのありかの情報が取得できなかった場合、LLMからの回答のみ表示
@@ -298,6 +302,12 @@ def display_contact_llm_response(llm_response):
         for document in llm_response["context"]:
             # ファイルパスを取得
             file_path = document.metadata["source"]
+            # PDF の page 情報があれば末尾に付与
+            if "page" in document.metadata:
+                page_number = document.metadata["page"]
+                file_info = f"{file_path} (ページNo.{page_number})"
+            else:
+                file_info = file_path
             # ファイルパスの重複は除去
             if file_path in file_path_list:
                 continue
